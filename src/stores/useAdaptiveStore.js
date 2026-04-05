@@ -6,8 +6,7 @@ const getInitialDarkMode = () => {
   if (saved !== null) {
     return JSON.parse(saved);
   }
-  // Check system preference
-  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return false;
 };
 
 export const useAdaptiveStore = create((set, get) => ({
@@ -163,7 +162,7 @@ export const useAdaptiveStore = create((set, get) => ({
       simplifiedMode: false,
       colorBlindMode: false,
       cognitiveMode: false,
-      darkMode: getInitialDarkMode(),
+      darkMode: false,
       dyslexiaMode: false
     });
     if (typeof document !== 'undefined') {

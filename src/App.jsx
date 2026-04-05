@@ -216,7 +216,7 @@ const AppContent = () => {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/elearning">
       <AppContent />
     </BrowserRouter>
   );
