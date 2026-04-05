@@ -56,13 +56,13 @@ export const courseService = {
     }
     try {
       const coursesSnapshot = await getDocs(query(collection(db, 'courses'), orderBy('createdAt', 'desc')));
-      const courses = coursesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const firestoreCourses = coursesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
-      // If Firestore has no courses, use static data
-      if (courses.length === 0) {
-        return coursesData;
-      }
-      return courses;
+      // Merge static with Firestore (Firestore overrides static with same ID)
+      const staticMap = new Map(coursesData.map(c => [c.id, c]));
+      firestoreCourses.forEach(c => staticMap.set(c.id, c));
+      
+      return Array.from(staticMap.values());
     } catch (error) {
       console.error('Error fetching courses from Firestore:', error);
       return coursesData;

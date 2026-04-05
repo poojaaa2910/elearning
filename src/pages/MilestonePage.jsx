@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { courseService } from '../services/courseService';
 import { useAuth } from '../hooks/useAuth';
 import { useCourseProgress } from '../hooks/useCourseProgress';
 import { useAdaptiveSettings } from '../hooks/useAdaptiveSettings';
 import { useBehaviorTracking } from '../hooks/useBehaviorTracking';
 import { useReadAloud } from '../hooks/useReadAloud';
+import { useCourseVisitTracker } from '../hooks/useCourseVisitTracker';
 import { 
   SpeakerWaveIcon, 
   PauseIcon, 
@@ -24,10 +26,23 @@ const MilestonePage = () => {
   const { simplifiedMode } = useAdaptiveSettings();
   const { isMilestoneCompleted, completeMilestone, currentMilestone, completedCount } = useCourseProgress(user?.uid, courseId);
   const { speaking, paused, voices, currentVoice, rate, error, ttsMethod, setCurrentVoice, setRate, speak, pause, resume, stop, toggle } = useReadAloud();
+  const { trackMilestoneCompletion, getVisitCount, resetStrugglingForMilestone } = useCourseVisitTracker();
   
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [visitCount, setVisitCount] = useState(0);
+  
+  useEffect(() => {
+    const fetchVisitCount = async () => {
+      if (courseId && milestoneId) {
+        resetStrugglingForMilestone(courseId, parseInt(milestoneId));
+        const count = await getVisitCount(courseId, parseInt(milestoneId));
+        setVisitCount(count);
+      }
+    };
+    fetchVisitCount();
+  }, [courseId, milestoneId]);
   
   useEffect(() => {
     const fetchCourse = async () => {
@@ -83,10 +98,38 @@ const MilestonePage = () => {
       await completeMilestone(parseInt(milestoneId));
     }
     
+    // Track milestone completion attempt
+    const result = await trackMilestoneCompletion(courseId, parseInt(milestoneId));
+    console.log('Track result:', result);
+    
+    if (result?.isStruggling) {
+      toast.custom((t) => (
+        <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} bg-[#537A5A] text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-4`}>
+          <div className="flex-1">
+            <p className="font-medium">Struggling with this section?</p>
+            <p className="text-sm text-white/80">You've tried {result.count} times - want me to help explain?</p>
+          </div>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              window.dispatchEvent(new CustomEvent('openChatbot', { 
+                detail: { 
+                  message: `I need help understanding: ${milestone?.title || 'this section'}. Can you explain it differently?` 
+                } 
+              }));
+            }}
+            className="px-4 py-2 bg-white text-[#537A5A] rounded-lg font-medium hover:bg-white/90"
+          >
+            Yes, help!
+          </button>
+        </div>
+      ));
+    }
+    
     if (currentIndex < course.milestones.length - 1) {
       navigate(`/milestone/${courseId}/${course.milestones[currentIndex + 1].id}`);
     } else {
-      navigate(`/course/${courseId}`);
+      navigate(`/quiz/${courseId}`);
     }
   };
 
@@ -117,15 +160,15 @@ const MilestonePage = () => {
   const content = showSimplified ? milestone.simplifiedContent : milestone.content;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="mb-6">
         <Link to={`/course/${courseId}`} className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-primary">
           ← Back to {course.title}
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 space-y-4">
           <Card className="overflow-hidden">
             <div className="p-6 bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
@@ -141,7 +184,7 @@ const MilestonePage = () => {
               </div>
             </div>
 
-            <div className="p-6">
+            <div className="p-4">
               {/* Video Player - Supports both YouTube and Custom Video with VTT */}
               <div className="aspect-video bg-gray-900 rounded-lg mb-6 overflow-hidden">
                 {course.videoUrl ? (
@@ -311,11 +354,25 @@ const MilestonePage = () => {
               <Button onClick={handleNext}>
                 {isLast ? 'Finish Course' : isCompleted ? 'Next Milestone →' : 'Complete & Next →'}
               </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('toggleChatbot', { detail: { open: true } }));
+                  window.dispatchEvent(new CustomEvent('openChatbot', { 
+                    detail: { 
+                      message: `I need help understanding: "${milestone?.title}". Can you explain this concept in a simpler way with examples?` 
+                    } 
+                  }));
+                }}
+                className="ml-2"
+              >
+                🤖 Need Help?
+              </Button>
             </div>
           </Card>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           <Card className="p-6">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Course Progress</h3>
             <div className="space-y-2 mb-4">
@@ -379,6 +436,10 @@ const MilestonePage = () => {
               <div className="flex justify-between">
                 <span>Clicks:</span>
                 <span className="font-medium text-gray-900 dark:text-gray-300">{clickCount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Attempts:</span>
+                <span className="font-medium text-gray-900 dark:text-gray-300">{visitCount}</span>
               </div>
             </div>
           </Card>

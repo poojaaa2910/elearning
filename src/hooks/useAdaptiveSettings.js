@@ -23,9 +23,7 @@ export const useAdaptiveSettings = () => {
     reset
   } = useAdaptiveStore();
 
-  // Apply settings when user preferences load
   useEffect(() => {
-    console.log('User data for adaptive settings:', user);
     if (user) {
       applyUserSettings({
         visionDifficulty: user.visionDifficulty,
@@ -36,16 +34,80 @@ export const useAdaptiveSettings = () => {
     }
   }, [user]);
 
-  // Apply dark mode on mount and when it changes
   useEffect(() => {
-    if (typeof document !== 'undefined') {
-      if (darkMode) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
+    if (typeof document === 'undefined') return;
+
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
     }
   }, [darkMode]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+
+    let mounted = true;
+    let zoomResetAttempted = false;
+
+    const checkZoom = () => {
+      if (!mounted) return;
+
+      const scale = window.visualViewport.scale;
+      const zoomPercent = Math.round(scale * 100);
+      
+      console.log('Visual viewport scale:', scale, 'Zoom:', zoomPercent + '%');
+
+      // If user zooms in beyond 120%
+      if (scale > 1.2) {
+        const currentFontSize = useAdaptiveStore.getState().fontSize;
+        
+        if (currentFontSize !== 'xlarge') {
+          console.log('Zoom detected:', zoomPercent, '-> setting xlarge font');
+          setFontSize('xlarge');
+          document.documentElement.classList.remove('font-normal', 'font-large');
+          document.documentElement.classList.add('font-xlarge');
+        }
+
+        // Try to reset zoom to 100%
+        if (!zoomResetAttempted) {
+          zoomResetAttempted = true;
+          console.log('Attempting to reset zoom to 100%');
+          
+          // Use visualViewport.offsetLeft to try to compensate
+          // Note: This may not work in all browsers due to security restrictions
+          if (window.visualViewport) {
+            // Calculate the difference needed to bring back to 100%
+            const offsetNeeded = (scale - 1) * window.innerWidth / 2;
+            // This is a workaround - may not work perfectly
+            window.scrollTo(window.scrollX - offsetNeeded, window.scrollY);
+          }
+        }
+      } else if (scale <= 1.1 && zoomResetAttempted) {
+        // Reset the flag when zoom goes back to normal
+        zoomResetAttempted = false;
+      }
+    };
+
+    // Use visualViewport resize event for more accurate zoom detection
+    window.visualViewport.addEventListener('resize', checkZoom);
+    
+    // Initial check
+    checkZoom();
+
+    // Fallback interval
+    const interval = setInterval(checkZoom, 500);
+
+    return () => {
+      mounted = false;
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', checkZoom);
+      }
+      clearInterval(interval);
+    };
+  }, [setFontSize]);
+
+  const autoZoom = fontSize === 'xlarge';
 
   return {
     fontSize,
@@ -55,6 +117,7 @@ export const useAdaptiveSettings = () => {
     darkMode,
     cognitiveMode,
     dyslexiaMode,
+    autoZoom,
     setDarkMode,
     toggleDarkMode,
     setSimplifiedMode,

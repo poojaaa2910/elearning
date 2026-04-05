@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './stores/useAuthStore';
 import { useAdaptiveSettings } from './hooks/useAdaptiveSettings';
 import { useAdminStore } from './stores/useAdminStore';
@@ -11,6 +12,7 @@ import FieldsPage from './pages/FieldsPage';
 import FieldPage from './pages/FieldPage';
 import CoursePage from './pages/CoursePage';
 import MilestonePage from './pages/MilestonePage';
+import QuizPage from './pages/QuizPage';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -207,6 +209,11 @@ const AppContent = () => {
           <Layout><MilestonePage /></Layout>
         </ProtectedRoute>
       } />
+      <Route path="/quiz/:courseId" element={
+        <ProtectedRoute>
+          <Layout><QuizPage /></Layout>
+        </ProtectedRoute>
+      } />
       
       {/* Catch all - redirect to login */}
       <Route path="*" element={<Navigate to="/login" replace />} />
@@ -217,6 +224,7 @@ const AppContent = () => {
 function App() {
   return (
     <BrowserRouter>
+      <Toaster position="top-center" />
       <AppContent />
     </BrowserRouter>
   );

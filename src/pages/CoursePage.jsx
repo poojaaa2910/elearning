@@ -5,7 +5,7 @@ import { userService } from '../services/userService';
 import { useAuth } from '../hooks/useAuth';
 import { useCourseProgress } from '../hooks/useCourseProgress';
 import { useAdaptiveSettings } from '../hooks/useAdaptiveSettings';
-import { BoltIcon, CheckCircleIcon, PlayIcon } from '@heroicons/react/24/outline';
+import { BoltIcon, CheckCircleIcon, PlayIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline';
 import Card from '../components/Card';
 import ProgressBar from '../components/ProgressBar';
 import Button from '../components/Button';
@@ -31,7 +31,7 @@ const CoursePage = () => {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 text-center py-12">
+      <div className="max-w-5xl mx-auto px-4 text-center py-12">
         <div className="w-12 h-12 border-4 border-[#537A5A] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
         <p className="text-gray-600">Loading course...</p>
       </div>
@@ -40,7 +40,7 @@ const CoursePage = () => {
 
   if (!course) {
     return (
-      <div className="max-w-7xl mx-auto px-4 text-center py-12">
+      <div className="max-w-5xl mx-auto px-4 text-center py-12">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Course not found</h1>
         <Link to="/fields" className="text-primary hover:underline mt-4 inline-block">
           Back to Courses
@@ -63,7 +63,7 @@ const CoursePage = () => {
   const progressPercent = getProgressPercentage(5);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
       <Link to={`/field/${course.field}`} className="inline-flex items-center text-gray-600 dark:text-gray-300 hover:text-primary mb-6">
         ← Back to {course.field}
       </Link>
@@ -154,6 +154,17 @@ const CoursePage = () => {
                   </Link>
                 );
               })}
+              {progressPercent === 100 && (
+                <Link
+                  to={`/quiz/${courseId}`}
+                  className="flex items-center space-x-3 p-3 rounded-lg bg-[#F29F29]/10 hover:bg-[#F29F29]/20 transition-colors"
+                >
+                  <span className="w-8 h-8 rounded-full bg-[#F29F29] text-white flex items-center justify-center">
+                    <ClipboardDocumentCheckIcon className="w-5 h-5" />
+                  </span>
+                  <span className="font-medium text-[#F29F29]">Take Quiz</span>
+                </Link>
+              )}
             </div>
           </Card>
         </div>

@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useAdaptiveSettings } from '../hooks/useAdaptiveSettings';
+import { courseService } from '../services/courseService';
 import { 
   CodeBracketIcon, 
   UserGroupIcon, 
@@ -13,6 +15,19 @@ import {
 const FieldsPage = () => {
   const user = useAuthStore((state) => state.user);
   const { fontSize } = useAdaptiveSettings();
+  const [courseCounts, setCourseCounts] = useState({ coding: 0, management: 0, philosophy: 0 });
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      const allCourses = await courseService.getAllCoursesFromFirestore();
+      const counts = { coding: 0, management: 0, philosophy: 0 };
+      allCourses.forEach(c => {
+        if (counts[c.field] !== undefined) counts[c.field]++;
+      });
+      setCourseCounts(counts);
+    };
+    fetchCounts();
+  }, []);
   
   const getRecommendedField = () => {
     if (!user?.preferredLearning) return null;
@@ -29,7 +44,7 @@ const FieldsPage = () => {
       name: 'Coding',
       icon: CodeBracketIcon,
       description: 'Master programming fundamentals, web development, and software engineering principles.',
-      courses: 3,
+      courses: courseCounts.coding || 3,
       bgColor: '#537A5A',
       stats: ['JavaScript', 'React', 'Data Structures']
     },
@@ -38,7 +53,7 @@ const FieldsPage = () => {
       name: 'Management',
       icon: UserGroupIcon,
       description: 'Develop leadership skills, time management, and professional communication.',
-      courses: 3,
+      courses: courseCounts.management || 3,
       bgColor: '#9333EA',
       stats: ['Time Management', 'Leadership', 'Communication']
     },
@@ -47,7 +62,7 @@ const FieldsPage = () => {
       name: 'Philosophy',
       icon: SparklesIcon,
       description: 'Explore wisdom traditions, ethical thinking, and profound life questions.',
-      courses: 3,
+      courses: courseCounts.philosophy || 3,
       bgColor: '#9AE19D',
       stats: ['Stoicism', 'Existentialism', 'Ethics']
     }

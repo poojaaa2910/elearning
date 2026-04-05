@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const MODEL_NAME = 'gemini-2.5-flash';
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+const API_KEY = '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';
+const MODEL_NAME = 'qwen/qwen3.6-plus:free';
+const API_URL = 'https://openrouter.ai/api/v1';
+const STORAGE_KEY = 'adaptiveLearn_chatHistory';
 
 const SYSTEM_PROMPT = `You are an AI learning assistant for an e-learning platform called AdaptiveLearn. Your role is to help students with their learning journey.
 
@@ -20,19 +21,50 @@ Context about the platform:
 - There are video, audio, and reading materials available
 - The platform has an onboarding process to set learning preferences
 
+When a user is struggling (visiting a section multiple times), be extra patient and offer to explain concepts in different ways.
+
 Always be helpful, concise, and encouraging. If you don't know something, admit it and suggest where the user might find the answer.`;
 
-const useChatbot = () => {
-  const [messages, setMessages] = useState([
-    {
-      id: 'welcome',
-      role: 'assistant',
-      content: "Hi! I'm your AI learning assistant. I can help you with any questions about our courses, platform features, or learning concepts. What would you like to know?",
-      timestamp: Date.now()
+const loadFromStorage = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      return JSON.parse(saved);
     }
-  ]);
+  } catch (e) {
+    console.error('Error loading chat history:', e);
+  }
+  return null;
+};
+
+const saveToStorage = (msgs) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
+  } catch (e) {
+    console.error('Error saving chat history:', e);
+  }
+};
+
+const defaultMessage = {
+  id: 'welcome',
+  role: 'assistant',
+  content: "Hi! I'm LearnMate, your AI learning assistant. I can help you with any questions about our courses, platform features, or learning concepts. What would you like to know?",
+  timestamp: Date.now()
+};
+
+const useChatbot = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [courseContext, setCourseContext] = useState(null);
   const messagesEndRef = useRef(null);
+  
+  const [messages, setMessages] = useState(() => {
+    const saved = loadFromStorage();
+    return saved && saved.length > 0 ? saved : [defaultMessage];
+  });
+
+  useEffect(() => {
+    saveToStorage(messages);
+  }, [messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -54,27 +86,30 @@ const useChatbot = () => {
     setIsLoading(true);
 
     try {
-      const fullPrompt = `${SYSTEM_PROMPT}\n\nUser question: ${content}`;
+      const messagesForAPI = messages.map(m => ({ role: m.role, content: m.content }));
+      
+      let systemWithContext = SYSTEM_PROMPT;
+      if (courseContext) {
+        systemWithContext += `\n\nCurrent Course Context:\n${courseContext}`;
+      }
 
-      const response = await fetch(API_URL, {
+      const response = await fetch(`${API_URL}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${API_KEY}`,
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'AdaptiveLearn'
         },
         body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: fullPrompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 512,
-          }
+          model: MODEL_NAME,
+          messages: [
+            { role: 'system', content: systemWithContext },
+            ...messagesForAPI,
+            { role: 'user', content }
+          ]
         })
       });
-
-      console.log('Response status:', response.status);
 
       if (response.status === 429) {
         throw new Error('rate_limit');
@@ -87,12 +122,11 @@ const useChatbot = () => {
       }
 
       const data = await response.json();
-      console.log('Response data:', data);
       
       const assistantMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.candidates?.[0]?.content?.parts?.[0]?.text || "I apologize, but I couldn't generate a response. Please try again.",
+        content: data.choices?.[0]?.message?.content || "I apologize, but I couldn't generate a response. Please try again.",
         timestamp: Date.now()
       };
 
@@ -120,14 +154,8 @@ const useChatbot = () => {
   };
 
   const clearChat = () => {
-    setMessages([
-      {
-        id: 'welcome',
-        role: 'assistant',
-        content: "Hi! I'm your AI learning assistant. I can help you with any questions about our courses, platform features, or learning concepts. What would you like to know?",
-        timestamp: Date.now()
-      }
-    ]);
+    setMessages([defaultMessage]);
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   return {
@@ -135,7 +163,9 @@ const useChatbot = () => {
     isLoading,
     sendMessage,
     clearChat,
-    messagesEndRef
+    messagesEndRef,
+    courseContext,
+    setCourseContext
   };
 };
 

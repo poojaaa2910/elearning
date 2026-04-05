@@ -9,6 +9,31 @@ import { coursesData } from '../data/courses';
 export const adminService = {
   // ==================== COURSES ====================
   
+  async syncAllCoursesToFirestore() {
+    const results = { success: 0, failed: 0 };
+    for (const course of coursesData) {
+      try {
+        const courseRef = doc(db, 'courses', course.id);
+        const docSnap = await getDoc(courseRef);
+        
+        if (!docSnap.exists()) {
+          await setDoc(courseRef, {
+            ...course,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          });
+          results.success++;
+        } else {
+          results.failed++;
+        }
+      } catch (error) {
+        console.error(`Error syncing course ${course.id}:`, error);
+        results.failed++;
+      }
+    }
+    return results;
+  },
+  
   async getAllCourses() {
     try {
       const coursesRef = collection(db, 'courses');
@@ -16,18 +41,23 @@ export const adminService = {
       const snapshot = await getDocs(q);
       const firestoreCourses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
-      // If Firestore has courses, use them
-      if (firestoreCourses.length > 0) {
-        return firestoreCourses;
-      }
-      
-      // Otherwise, map static courses to have string IDs
-      return coursesData.map(course => ({
+      // Get static courses with string IDs
+      const staticCourses = coursesData.map(course => ({
         ...course,
         id: course.id,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }));
+      
+      // If Firestore has courses, merge with static (Firestore overrides static with same ID)
+      if (firestoreCourses.length > 0) {
+        const staticMap = new Map(staticCourses.map(c => [c.id, c]));
+        firestoreCourses.forEach(c => staticMap.set(c.id, c));
+        return Array.from(staticMap.values());
+      }
+      
+      // Otherwise, use static courses
+      return staticCourses;
     } catch (error) {
       console.log('Using static courses as fallback');
       return coursesData.map(course => ({
@@ -55,8 +85,11 @@ export const adminService = {
 
   async createCourse(courseData) {
     const courseRef = doc(collection(db, 'courses'));
+    const cleanData = Object.fromEntries(
+      Object.entries(courseData).filter(([_, v]) => v !== undefined)
+    );
     await setDoc(courseRef, {
-      ...courseData,
+      ...cleanData,
       milestones: [],
       quiz: [],
       createdAt: new Date().toISOString(),
@@ -67,10 +100,24 @@ export const adminService = {
 
   async updateCourse(courseId, courseData) {
     const courseRef = doc(db, 'courses', courseId);
-    await updateDoc(courseRef, {
-      ...courseData,
-      updatedAt: new Date().toISOString()
-    });
+    const docSnap = await getDoc(courseRef);
+    const cleanData = Object.fromEntries(
+      Object.entries({
+        ...courseData,
+        updatedAt: new Date().toISOString()
+      }).filter(([_, v]) => v !== undefined)
+    );
+    
+    if (docSnap.exists()) {
+      await updateDoc(courseRef, cleanData);
+    } else {
+      const existingCourse = coursesData.find(c => c.id === courseId);
+      await setDoc(courseRef, {
+        ...existingCourse,
+        ...cleanData,
+        createdAt: cleanData.updatedAt
+      });
+    }
   },
 
   async deleteCourse(courseId) {
@@ -97,7 +144,9 @@ export const adminService = {
     const milestones = course?.milestones || [];
     milestones.push({
       id: Date.now().toString(),
-      ...milestoneData,
+      ...Object.fromEntries(
+        Object.entries(milestoneData).filter(([_, v]) => v !== undefined)
+      ),
       order: milestones.length + 1
     });
     
@@ -114,7 +163,12 @@ export const adminService = {
     const milestones = course?.milestones || [];
     const index = milestones.findIndex(m => m.id === milestoneId);
     if (index !== -1) {
-      milestones[index] = { ...milestones[index], ...milestoneData };
+      milestones[index] = { 
+        ...milestones[index], 
+        ...Object.fromEntries(
+          Object.entries(milestoneData).filter(([_, v]) => v !== undefined)
+        )
+      };
     }
     
     await updateDoc(courseRef, {

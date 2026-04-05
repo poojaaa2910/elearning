@@ -25,20 +25,20 @@
 /* Font scaling based on vision difficulty */
 .font-normal { --font-scale: 1; }
 .font-large { --font-scale: 1.15; }
-.font-xlarge { --font-scale: 1.25; }
+.font-xlarge { --font-scale: 1.35; }
 
 html {
   font-size: calc(16px * var(--font-scale));
   scroll-behavior: smooth;
 }
 
-/* Apply scaled font size to body only - avoids breaking layouts */
-.font-xlarge body {
-  font-size: 115% !important;
+/* Apply scaled font size to html */
+.font-xlarge {
+  font-size: 135%;
 }
 
-.font-large body {
-  font-size: 107% !important;
+.font-large {
+  font-size: 115%;
 }
 
 /* High contrast mode */

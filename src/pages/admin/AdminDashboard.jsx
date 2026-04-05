@@ -8,7 +8,8 @@ import {
   QuestionMarkCircleIcon,
   ArrowRightIcon,
   PlusIcon,
-  PencilSquareIcon
+  PencilSquareIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 
 export default function AdminDashboard() {
@@ -80,7 +81,26 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <button
+          onClick={async () => {
+            if (confirm('This will sync all static courses to Firestore. Continue?')) {
+              const result = await adminService.syncAllCoursesToFirestore();
+              alert(`Synced ${result.success} courses. ${result.failed} already existed.`);
+              window.location.reload();
+            }
+          }}
+          className="flex items-center gap-4 p-6 bg-[#F29F29] rounded-2xl text-white hover:opacity-90 transition-opacity"
+        >
+          <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
+            <ArrowPathIcon className="w-7 h-7" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold">Sync Courses</h3>
+            <p className="text-white/80">Add default courses to database</p>
+          </div>
+        </button>
+
         <Link
           to="/admin/courses/new"
           className="flex items-center gap-4 p-6 bg-[#537A5A] rounded-2xl text-white hover:opacity-90 transition-opacity"

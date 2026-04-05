@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { courseService } from '../services/courseService';
 import { useAdaptiveSettings } from '../hooks/useAdaptiveSettings';
@@ -22,8 +23,18 @@ const getCourseIcon = (field) => {
 
 const FieldPage = () => {
   const { fieldId } = useParams();
-  const courses = courseService.getCoursesByField(fieldId);
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { fontSize, simplifiedMode, colorBlindMode, cognitiveMode } = useAdaptiveSettings();
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      const data = await courseService.getCoursesByFieldFromFirestore(fieldId);
+      setCourses(data);
+      setLoading(false);
+    };
+    fetchCourses();
+  }, [fieldId]);
   
   const fieldInfo = {
     coding: {
@@ -96,6 +107,13 @@ const FieldPage = () => {
         {/* Courses Grid */}
         <div>
           <h2 className="text-2xl font-bold text-[#1F2937] dark:text-white mb-8">Available Courses</h2>
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="w-8 h-8 border-4 border-[#189D91] border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : courses.length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-400">No courses in this field yet.</p>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {courses.map((course, index) => (
               <Link 
@@ -148,6 +166,7 @@ const FieldPage = () => {
               </Link>
             ))}
           </div>
+          )}
         </div>
       </div>
     </div>

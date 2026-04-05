@@ -8,7 +8,8 @@ import {
   DocumentTextIcon,
   ArrowRightIcon,
   MagnifyingGlassIcon,
-  FunnelIcon
+  FunnelIcon,
+  QuestionMarkCircleIcon
 } from '@heroicons/react/24/outline';
 
 export default function CourseListPage() {
@@ -104,14 +105,14 @@ export default function CourseListPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredCourses.map((course) => (
             <div
               key={course.id}
-              className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow"
+              className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow flex flex-col"
             >
               {/* Thumbnail */}
-              <div className="h-40 bg-gray-100 dark:bg-slate-700 relative">
+              <div className="h-36 bg-gray-100 dark:bg-slate-700 relative flex-shrink-0">
                 {course.thumbnail ? (
                   <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
                 ) : (
@@ -125,36 +126,43 @@ export default function CourseListPage() {
               </div>
 
               {/* Content */}
-              <div className="p-5">
-                <h3 className="font-bold text-gray-900 dark:text-white text-lg mb-2 line-clamp-1">
+              <div className="p-4 flex-1 flex flex-col">
+                <h3 className="font-bold text-gray-900 dark:text-white text-lg mb-1 line-clamp-1">
                   {course.title}
                 </h3>
-                <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-2 mb-4">
+                <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-2 mb-3">
                   {course.description}
                 </p>
 
                 {/* Stats */}
-                <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-4">
+                <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 mb-4">
                   <span>{course.milestones?.length || 0} milestones</span>
                   <span>•</span>
-                  <span>{course.quiz?.length || 0} quiz questions</span>
+                  <span>{course.quiz?.length || 0} quiz</span>
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap gap-2 mt-auto">
                   <Link
                     to={`/admin/courses/${course.id}`}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#189D91]/10 text-[#189D91] rounded-lg font-medium hover:bg-[#189D91]/20 transition-colors"
+                    className="flex items-center justify-center gap-1 px-3 py-2 bg-[#189D91]/10 text-[#189D91] rounded-lg font-medium hover:bg-[#189D91]/20 transition-colors text-sm"
                   >
                     <PencilSquareIcon className="w-4 h-4" />
                     Edit
                   </Link>
                   <Link
                     to={`/admin/courses/${course.id}/files`}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#9333EA]/10 text-[#9333EA] rounded-lg font-medium hover:bg-[#9333EA]/20 transition-colors"
+                    className="flex items-center justify-center gap-1 px-3 py-2 bg-[#9333EA]/10 text-[#9333EA] rounded-lg font-medium hover:bg-[#9333EA]/20 transition-colors text-sm"
                   >
                     <DocumentTextIcon className="w-4 h-4" />
                     Files
+                  </Link>
+                  <Link
+                    to={`/admin/courses/${course.id}/quiz`}
+                    className="flex items-center justify-center gap-1 px-3 py-2 bg-[#F29F29]/10 text-[#F29F29] rounded-lg font-medium hover:bg-[#F29F29]/20 transition-colors text-sm"
+                  >
+                    <QuestionMarkCircleIcon className="w-4 h-4" />
+                    Quiz
                   </Link>
                   <button
                     onClick={() => openDeleteModal(course)}
