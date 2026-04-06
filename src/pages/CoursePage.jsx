@@ -91,14 +91,14 @@ const CoursePage = () => {
                   </span>
                 )}
               </div>
-              {course.notes && (
-                <div className="absolute top-4 right-4">
+              {course.notes !== undefined && course.notes !== '' && (
+                <div className="absolute top-4 right-4 z-10">
                   <button
                     onClick={() => setShowNotes(true)}
                     className="flex items-center gap-2 px-4 py-2 bg-[#F29F29] hover:bg-[#e8931f] text-white rounded-full text-sm font-medium shadow-lg transition-all hover:scale-105"
                   >
                     <DocumentTextIcon className="w-5 h-5" />
-                    📝 Notes
+                    Notes
                   </button>
                 </div>
               )}

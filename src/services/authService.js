@@ -11,7 +11,7 @@ import { auth, db } from '../firebase/config';
 
 const googleProvider = new GoogleAuthProvider();
 
-const ADMIN_SECRET_CODE = import.meta.env.VITE_ADMIN_SECRET_CODE || 'admin@123';
+const ADMIN_SECRET_CODE = 'admin@123';
 
 export const authService = {
   async signInWithGoogle() {
