@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 
-const API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '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';
+const API_KEY = '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';
 const MODEL_NAME = 'qwen/qwen3.6-plus:free';
 const API_URL = 'https://openrouter.ai/api/v1';
+const SITE_URL = 'https://elearning-1fn.pages.dev';
+const SITE_NAME = 'AdaptiveLearn';
 const STORAGE_KEY = 'adaptiveLearn_chatHistory';
 
 const SYSTEM_PROMPT = `You are an AI learning assistant for an e-learning platform called AdaptiveLearn. Your role is to help students with their learning journey.
@@ -98,8 +100,8 @@ const useChatbot = () => {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${API_KEY}`,
-          'HTTP-Referer': import.meta.env.VITE_SITE_URL || 'https://elearning-1fn.pages.dev',
-          'X-Title': import.meta.env.VITE_SITE_NAME || 'AdaptiveLearn'
+          'HTTP-Referer': SITE_URL,
+          'X-Title': SITE_NAME
         },
         body: JSON.stringify({
           model: MODEL_NAME,
