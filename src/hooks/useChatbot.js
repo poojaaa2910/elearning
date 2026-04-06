@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 
 const API_KEY = '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';
-const MODEL_NAME = 'qwen/qwen3.6-plus:free';
+const MODEL_NAME = 'google/gemini-2.0-flash-001';
 const API_URL = 'https://openrouter.ai/api/v1';
 const SITE_URL = 'https://elearning-1fn.pages.dev';
 const SITE_NAME = 'AdaptiveLearn';
@@ -119,8 +119,8 @@ const useChatbot = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('API Error:', errorData);
-        throw new Error(errorData.error?.message || 'Failed to get response from AI');
+        console.error('API Error:', response.status, errorData);
+        throw new Error(errorData.error?.message || `API error: ${response.status}`);
       }
 
       const data = await response.json();

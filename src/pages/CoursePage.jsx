@@ -5,10 +5,11 @@ import { userService } from '../services/userService';
 import { useAuth } from '../hooks/useAuth';
 import { useCourseProgress } from '../hooks/useCourseProgress';
 import { useAdaptiveSettings } from '../hooks/useAdaptiveSettings';
-import { BoltIcon, CheckCircleIcon, PlayIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline';
+import { BoltIcon, CheckCircleIcon, PlayIcon, ClipboardDocumentCheckIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import Card from '../components/Card';
 import ProgressBar from '../components/ProgressBar';
 import Button from '../components/Button';
+import NotesModal from '../components/NotesModal';
 
 const CoursePage = () => {
   const { courseId } = useParams();
@@ -16,6 +17,7 @@ const CoursePage = () => {
   const { user } = useAuth();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showNotes, setShowNotes] = useState(false);
   
   useEffect(() => {
     const fetchCourse = async () => {
@@ -89,6 +91,17 @@ const CoursePage = () => {
                   </span>
                 )}
               </div>
+              {course.notes && (
+                <div className="absolute top-4 right-4">
+                  <button
+                    onClick={() => setShowNotes(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#F29F29] hover:bg-[#e8931f] text-white rounded-full text-sm font-medium shadow-lg transition-all hover:scale-105"
+                  >
+                    <DocumentTextIcon className="w-5 h-5" />
+                    📝 Notes
+                  </button>
+                </div>
+              )}
             </div>
             
             <div className="p-8">
@@ -169,6 +182,13 @@ const CoursePage = () => {
           </Card>
         </div>
       </div>
+
+      <NotesModal 
+        isOpen={showNotes} 
+        onClose={() => setShowNotes(false)} 
+        notes={course?.notes} 
+        courseTitle={course?.title}
+      />
     </div>
   );
 };

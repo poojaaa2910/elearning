@@ -23,7 +23,8 @@ export default function CourseFormPage() {
     youtubeId: '',
     thumbnail: '',
     fullContent: '',
-    simplifiedContent: ''
+    simplifiedContent: '',
+    notes: ''
   });
 
   const [milestones, setMilestones] = useState([]);
@@ -45,7 +46,8 @@ export default function CourseFormPage() {
           youtubeId: course.youtubeId || '',
           thumbnail: course.thumbnail || '',
           fullContent: course.fullContent || '',
-          simplifiedContent: course.simplifiedContent || ''
+          simplifiedContent: course.simplifiedContent || '',
+          notes: course.notes || ''
         });
         setMilestones(course.milestones || []);
       }
@@ -253,6 +255,23 @@ export default function CourseFormPage() {
                 rows={4}
                 className="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-[#189D91] focus:border-transparent resize-none"
               />
+            </div>
+
+            {/* Notes */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Comprehensive Notes (Markdown supported)
+              </label>
+              <textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Detailed notes for slow learners - use markdown for formatting..."
+                rows={8}
+                className="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-[#189D91] focus:border-transparent resize-none font-mono text-sm"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Supports markdown: **bold**, *italic*, - lists, 1. numbered lists, ## headers, etc.
+              </p>
             </div>
           </div>
         </div>
