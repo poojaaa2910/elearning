@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 
 const API_KEY = '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';
-const MODEL_NAME = 'google/gemini-2.0-flash-001';
+const MODEL_NAME = 'meta-llama/llama-3.1-8b-instruct';
 const API_URL = 'https://openrouter.ai/api/v1';
-const SITE_URL = 'https://elearning-1fn.pages.dev';
+const SITE_URL = 'http://localhost:5174';
 const SITE_NAME = 'AdaptiveLearn';
 const STORAGE_KEY = 'adaptiveLearn_chatHistory';
 
