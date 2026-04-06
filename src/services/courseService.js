@@ -1,8 +1,5 @@
 import { db } from '../firebase/config';
 import { collection, getDocs, doc, getDoc, query, orderBy } from 'firebase/firestore';
-import { coursesData } from '../data/courses';
-
-const USE_FIRESTORE = true; // Set to false to use static data only
 
 export const courseService = {
   async getFields() {
@@ -13,64 +10,47 @@ export const courseService = {
     ];
   },
 
-  getCoursesByField(field) {
-    return coursesData.filter(course => course.field === field);
+  async getCoursesByField(field) {
+    const courses = await this.getAllCoursesFromFirestore();
+    return courses.filter(course => course.field === field);
   },
 
-  getCourseById(courseId) {
-    return coursesData.find(course => course.id === courseId) || null;
+  async getCourseById(courseId) {
+    return this.getCourseFromFirestore(courseId);
   },
 
-  getMilestoneById(courseId, milestoneId) {
-    const course = this.getCourseById(courseId);
+  async getMilestoneById(courseId, milestoneId) {
+    const course = await this.getCourseFromFirestore(courseId);
     if (!course) return null;
-    return course.milestones.find(m => m.id === milestoneId) || null;
+    return course.milestones?.find(m => m.id.toString() === milestoneId.toString()) || null;
   },
 
-  getAllCourses() {
-    return coursesData;
+  async getAllCourses() {
+    return this.getAllCoursesFromFirestore();
   },
 
   // ==================== FIRESTORE METHODS ====================
 
   async getCourseFromFirestore(courseId) {
-    if (!USE_FIRESTORE) {
-      return this.getCourseById(courseId);
-    }
     try {
       const courseDoc = await getDoc(doc(db, 'courses', courseId));
       if (courseDoc.exists()) {
         return { id: courseDoc.id, ...courseDoc.data() };
       }
-      // Fallback to static data
-      return this.getCourseById(courseId);
+      return null;
     } catch (error) {
       console.error('Error fetching course from Firestore:', error);
-      return this.getCourseById(courseId);
+      return null;
     }
   },
 
   async getAllCoursesFromFirestore() {
-    if (!USE_FIRESTORE) {
-      return coursesData;
-    }
     try {
       const coursesSnapshot = await getDocs(query(collection(db, 'courses'), orderBy('createdAt', 'desc')));
-      const firestoreCourses = coursesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      
-      // Merge static with Firestore (Firestore overrides static with same ID)
-      const staticMap = new Map(coursesData.map(c => [c.id, c]));
-      firestoreCourses.forEach(c => staticMap.set(c.id, c));
-      
-      return Array.from(staticMap.values());
+      return coursesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
       console.error('Error fetching courses from Firestore:', error);
-      return coursesData;
+      return [];
     }
-  },
-
-  async getCoursesByFieldFromFirestore(field) {
-    const courses = await this.getAllCoursesFromFirestore();
-    return courses.filter(course => course.field === field);
   }
 };

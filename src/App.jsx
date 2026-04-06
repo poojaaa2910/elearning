@@ -11,6 +11,7 @@ import DashboardPage from './pages/DashboardPage';
 import FieldsPage from './pages/FieldsPage';
 import FieldPage from './pages/FieldPage';
 import CoursePage from './pages/CoursePage';
+import NotesPage from './pages/NotesPage';
 import MilestonePage from './pages/MilestonePage';
 import QuizPage from './pages/QuizPage';
 import AdminLayout from './components/admin/AdminLayout';
@@ -202,6 +203,11 @@ const AppContent = () => {
       <Route path="/course/:courseId" element={
         <ProtectedRoute>
           <Layout><CoursePage /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/course/:courseId/notes" element={
+        <ProtectedRoute>
+          <Layout><NotesPage /></Layout>
         </ProtectedRoute>
       } />
       <Route path="/milestone/:courseId/:milestoneId" element={

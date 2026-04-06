@@ -4,68 +4,19 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
-import { coursesData } from '../data/courses';
 
 export const adminService = {
   // ==================== COURSES ====================
-  
-  async syncAllCoursesToFirestore() {
-    const results = { success: 0, failed: 0 };
-    for (const course of coursesData) {
-      try {
-        const courseRef = doc(db, 'courses', course.id);
-        const docSnap = await getDoc(courseRef);
-        
-        if (!docSnap.exists()) {
-          await setDoc(courseRef, {
-            ...course,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          });
-          results.success++;
-        } else {
-          results.failed++;
-        }
-      } catch (error) {
-        console.error(`Error syncing course ${course.id}:`, error);
-        results.failed++;
-      }
-    }
-    return results;
-  },
   
   async getAllCourses() {
     try {
       const coursesRef = collection(db, 'courses');
       const q = query(coursesRef, orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
-      const firestoreCourses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      
-      // Get static courses with string IDs
-      const staticCourses = coursesData.map(course => ({
-        ...course,
-        id: course.id,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }));
-      
-      // If Firestore has courses, merge with static (Firestore overrides static with same ID)
-      if (firestoreCourses.length > 0) {
-        const staticMap = new Map(staticCourses.map(c => [c.id, c]));
-        firestoreCourses.forEach(c => staticMap.set(c.id, c));
-        return Array.from(staticMap.values());
-      }
-      
-      // Otherwise, use static courses
-      return staticCourses;
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
-      console.log('Using static courses as fallback');
-      return coursesData.map(course => ({
-        ...course,
-        id: course.id,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }));
+      console.error('Error fetching courses:', error);
+      return [];
     }
   },
 
@@ -76,10 +27,10 @@ export const adminService = {
       if (docSnap.exists()) {
         return { id: docSnap.id, ...docSnap.data() };
       }
-      // Fallback to static data
-      return coursesData.find(c => c.id === courseId) || null;
+      return null;
     } catch (error) {
-      return coursesData.find(c => c.id === courseId) || null;
+      console.error('Error fetching course:', error);
+      return null;
     }
   },
 
@@ -98,6 +49,21 @@ export const adminService = {
     return courseRef.id;
   },
 
+  async createCourseWithId(customId, courseData) {
+    const courseRef = doc(db, 'courses', customId);
+    const cleanData = Object.fromEntries(
+      Object.entries(courseData).filter(([_, v]) => v !== undefined)
+    );
+    await setDoc(courseRef, {
+      ...cleanData,
+      milestones: [],
+      quiz: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+    return customId;
+  },
+
   async updateCourse(courseId, courseData) {
     const courseRef = doc(db, 'courses', courseId);
     const docSnap = await getDoc(courseRef);
@@ -111,9 +77,7 @@ export const adminService = {
     if (docSnap.exists()) {
       await updateDoc(courseRef, cleanData);
     } else {
-      const existingCourse = coursesData.find(c => c.id === courseId);
       await setDoc(courseRef, {
-        ...existingCourse,
         ...cleanData,
         createdAt: cleanData.updatedAt
       });
@@ -270,12 +234,7 @@ export const adminService = {
     try {
       // Total courses
       const coursesSnapshot = await getDocs(collection(db, 'courses'));
-      let totalCourses = coursesSnapshot.size;
-
-      // If no courses in Firestore, count static courses
-      if (totalCourses === 0) {
-        totalCourses = coursesData.length;
-      }
+      const totalCourses = coursesSnapshot.size;
 
       // Total users
       const usersSnapshot = await getDocs(collection(db, 'users'));
@@ -297,11 +256,11 @@ export const adminService = {
         totalQuizzes
       };
     } catch (error) {
-      console.log('Using fallback stats');
+      console.error('Error fetching stats:', error);
       return {
-        totalCourses: coursesData.length,
+        totalCourses: 0,
         totalUsers: 0,
-        totalAdmins: 1,
+        totalAdmins: 0,
         totalQuizzes: 0
       };
     }

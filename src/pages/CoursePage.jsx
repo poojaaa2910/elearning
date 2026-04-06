@@ -9,7 +9,6 @@ import { BoltIcon, CheckCircleIcon, PlayIcon, ClipboardDocumentCheckIcon, Docume
 import Card from '../components/Card';
 import ProgressBar from '../components/ProgressBar';
 import Button from '../components/Button';
-import NotesModal from '../components/NotesModal';
 
 const CoursePage = () => {
   const { courseId } = useParams();
@@ -17,7 +16,6 @@ const CoursePage = () => {
   const { user } = useAuth();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showNotes, setShowNotes] = useState(false);
   
   useEffect(() => {
     const fetchCourse = async () => {
@@ -93,13 +91,13 @@ const CoursePage = () => {
               </div>
               {course.notes !== undefined && course.notes !== '' && (
                 <div className="absolute top-4 right-4 z-10">
-                  <button
-                    onClick={() => setShowNotes(true)}
+                  <Link
+                    to={`/course/${courseId}/notes`}
                     className="flex items-center gap-2 px-4 py-2 bg-[#F29F29] hover:bg-[#e8931f] text-white rounded-full text-sm font-medium shadow-lg transition-all hover:scale-105"
                   >
                     <DocumentTextIcon className="w-5 h-5" />
                     Notes
-                  </button>
+                  </Link>
                 </div>
               )}
             </div>
@@ -122,6 +120,15 @@ const CoursePage = () => {
               <Button onClick={handleStartLearning} size="lg" className="w-full md:w-auto">
                 {progressPercent > 0 ? 'Continue Learning' : 'Start Learning'}
               </Button>
+              {course.notes !== undefined && course.notes !== '' && (
+                <Link
+                  to={`/course/${courseId}/notes`}
+                  className="ml-3 inline-flex items-center gap-2 px-4 py-2 border-2 border-[#F29F29] text-[#F29F29] rounded-lg font-medium hover:bg-[#F29F29] hover:text-white transition-colors"
+                >
+                  <DocumentTextIcon className="w-5 h-5" />
+                  View Notes
+                </Link>
+              )}
             </div>
           </Card>
         </div>
@@ -182,13 +189,6 @@ const CoursePage = () => {
           </Card>
         </div>
       </div>
-
-      <NotesModal 
-        isOpen={showNotes} 
-        onClose={() => setShowNotes(false)} 
-        notes={course?.notes} 
-        courseTitle={course?.title}
-      />
     </div>
   );
 };
