@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 
-const API_KEY = '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';
+const API_KEY = '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';
 const MODEL_NAME = 'google/gemini-2.0-flash-001';
 const API_URL = 'https://openrouter.ai/api/v1';
 const SITE_URL = 'https://elearning-1fn.pages.dev';
