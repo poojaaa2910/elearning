@@ -60,7 +60,8 @@ const CoursePage = () => {
   };
 
   const fieldIcon = course.field === 'coding' ? '💻' : course.field === 'management' ? '👔' : '🏛️';
-  const progressPercent = getProgressPercentage(5);
+  const totalMilestones = course.milestones?.length || 0;
+  const progressPercent = getProgressPercentage(totalMilestones);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
