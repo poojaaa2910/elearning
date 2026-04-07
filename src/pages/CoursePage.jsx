@@ -113,7 +113,7 @@ const CoursePage = () => {
                 </div>
                 <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-300">
                   <span>📄</span>
-                  <span>5 Milestones</span>
+                  <span>{course.milestones?.length || 0} Milestones</span>
                 </div>
               </div>
 
@@ -137,9 +137,9 @@ const CoursePage = () => {
           <Card className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Your Progress</h3>
             <ProgressBar value={progressPercent} max={100} className="mb-4" />
-            <p className="text-gray-600 dark:text-gray-300 text-sm">
-              {progress?.milestonesCompleted?.length || 0} of 5 milestones completed
-            </p>
+              <p className="text-gray-600 dark:text-gray-300 text-sm">
+                {progress?.milestonesCompleted?.length || 0} of {course.milestones?.length || 0} milestones completed
+              </p>
           </Card>
 
           <Card className="p-6">
