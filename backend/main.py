@@ -1,36 +1,32 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from typing import Optional
-import uvicorn
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 
-app = FastAPI(title="AdaptiveLearn ML Service", version="1.0.0")
+app = Flask(__name__)
+CORS(app)
 
-class BehaviorData(BaseModel):
-    userId: str
-    courseId: str
-    time_spent: float
-    scroll_depth: float
-    click_count: int
+class BehaviorData:
+    def __init__(self, userId, courseId, time_spent, scroll_depth, click_count):
+        self.userId = userId
+        self.courseId = courseId
+        self.time_spent = time_spent
+        self.scroll_depth = scroll_depth
+        self.click_count = click_count
 
-class AnalysisResult(BaseModel):
-    difficulty_score: float
-    recommendation_type: str
-    confidence: float = 0.85
+@app.route("/")
+def root():
+    return jsonify({"status": "ok", "message": "AdaptiveLearn ML Service is running"})
 
-@app.get("/")
-async def root():
-    return {"status": "ok", "message": "AdaptiveLearn ML Service is running"}
+@app.route("/health")
+def health_check():
+    return jsonify({"status": "healthy"})
 
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy"}
-
-@app.post("/analyze")
-async def analyze_behavior(data: BehaviorData) -> AnalysisResult:
+@app.route("/analyze", methods=["POST"])
+def analyze_behavior():
     try:
-        time_spent = data.time_spent
-        scroll_depth = data.scroll_depth
-        click_count = data.click_count
+        data = request.get_json()
+        time_spent = data.get('time_spent', 0)
+        scroll_depth = data.get('scroll_depth', 0)
+        click_count = data.get('click_count', 0)
         
         time_factor = min(time_spent / 300, 1.0)
         scroll_factor = scroll_depth / 100.0
@@ -57,26 +53,26 @@ async def analyze_behavior(data: BehaviorData) -> AnalysisResult:
         
         confidence = 0.7 + (0.15 * (1 - abs(difficulty_score - 5) / 5))
         
-        return AnalysisResult(
-            difficulty_score=round(difficulty_score, 2),
-            recommendation_type=recommendation_type,
-            confidence=round(confidence, 2)
-        )
+        return jsonify({
+            "difficulty_score": round(difficulty_score, 2),
+            "recommendation_type": recommendation_type,
+            "confidence": round(confidence, 2)
+        })
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return jsonify({"error": str(e)}), 500
 
-@app.get("/recommend/{userId}")
-async def get_recommendations(userId: str):
-    return {
+@app.route("/recommend/<userId>", methods=["GET"])
+def get_recommendations(userId):
+    return jsonify({
         "userId": userId,
         "recommendations": [
             {"type": "simplified", "reason": "Low engagement detected"},
             {"type": "video", "reason": "High time spent"}
         ]
-    }
+    })
 
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port)
