@@ -27,8 +27,8 @@ const DashboardPage = () => {
   const navigate = useNavigate();
   const { fontSize, contrastMode, simplifiedMode, colorBlindMode, darkMode, toggleDarkMode, cognitiveMode, setSimplifiedMode, setFontSize, dyslexiaMode, setDyslexiaMode } = useAdaptiveSettings();
   const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [allCourses, setAllCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const allCourses = courseService.getAllCourses();
 
   const handleAdjustSettings = () => {
     navigate('/onboarding', { state: { from: 'dashboard' } });
@@ -40,19 +40,23 @@ const DashboardPage = () => {
 
   useEffect(() => {
     const fetchProgress = async () => {
-      if (user?.uid) {
-        try {
+      try {
+        // Fetch courses from Firestore
+        const courses = await courseService.getAllCoursesFromFirestore();
+        setAllCourses(courses);
+        
+        if (user?.uid) {
           const enrolled = [];
-          for (const course of allCourses) {
+          for (const course of courses) {
             const progress = await userService.getCourseProgress(user.uid, course.id);
             if (progress?.milestonesCompleted?.length > 0) {
               enrolled.push({ ...course, progress });
             }
           }
           setEnrolledCourses(enrolled);
-        } catch (error) {
-          console.error('Error fetching progress:', error);
         }
+      } catch (error) {
+        console.error('Error fetching progress:', error);
       }
       setIsLoading(false);
     };

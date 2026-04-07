@@ -49,7 +49,15 @@ export default function CourseFormPage() {
         notes: parsed.notes || ''
       });
       setMilestones(parsed.milestones || []);
-      setQuiz(parsed.quiz || []);
+      
+      // Handle quiz - either at top level or inside milestones
+      let quizData = parsed.quiz || [];
+      if (quizData.length === 0) {
+        // Extract quiz from milestones if not at top level
+        quizData = parsed.milestones?.flatMap(m => m.quiz || []) || [];
+      }
+      setQuiz(quizData);
+      
       toast.success('JSON data loaded successfully!');
     } catch (error) {
       toast.error('Invalid JSON format. Please check your input.');

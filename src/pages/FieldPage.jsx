@@ -124,7 +124,18 @@ const FieldPage = () => {
                 <div className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl border border-[#E5E7EB] dark:border-slate-700 transition-all duration-500 transform hover:-translate-y-2">
                   {/* Thumbnail */}
                   <div className="relative h-48 bg-gray-100 dark:bg-slate-700 overflow-hidden">
-                    <div className="absolute inset-0 flex items-center justify-center">
+                    {course.thumbnail ? (
+                      <img 
+                        src={course.thumbnail} 
+                        alt={course.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.parentElement.querySelector('.icon-placeholder').style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className="absolute inset-0 flex items-center justify-center icon-placeholder" style={{ display: course.thumbnail ? 'none' : 'flex' }}>
                       {(() => {
                         const Icon = getCourseIcon(course.field);
                         return <Icon className="w-20 h-20 text-gray-300 dark:text-gray-500" />;

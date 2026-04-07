@@ -10,9 +10,40 @@ export const courseService = {
     ];
   },
 
-  async getCoursesByField(field) {
+  // Get all courses from Firestore
+  async getAllCoursesFromFirestore() {
+    try {
+      const coursesSnapshot = await getDocs(query(collection(db, 'courses'), orderBy('createdAt', 'desc')));
+      return coursesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error('Error fetching courses from Firestore:', error);
+      return [];
+    }
+  },
+
+  // Get single course by ID
+  async getCourseFromFirestore(courseId) {
+    try {
+      const courseDoc = await getDoc(doc(db, 'courses', courseId));
+      if (courseDoc.exists()) {
+        return { id: courseDoc.id, ...courseDoc.data() };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching course from Firestore:', error);
+      return null;
+    }
+  },
+
+  // Get courses by field
+  async getCoursesByFieldFromFirestore(field) {
     const courses = await this.getAllCoursesFromFirestore();
     return courses.filter(course => course.field === field);
+  },
+
+  // Legacy compatibility methods
+  async getCoursesByField(field) {
+    return this.getCoursesByFieldFromFirestore(field);
   },
 
   async getCourseById(courseId) {
@@ -27,30 +58,5 @@ export const courseService = {
 
   async getAllCourses() {
     return this.getAllCoursesFromFirestore();
-  },
-
-  // ==================== FIRESTORE METHODS ====================
-
-  async getCourseFromFirestore(courseId) {
-    try {
-      const courseDoc = await getDoc(doc(db, 'courses', courseId));
-      if (courseDoc.exists()) {
-        return { id: courseDoc.id, ...courseDoc.data() };
-      }
-      return null;
-    } catch (error) {
-      console.error('Error fetching course from Firestore:', error);
-      return null;
-    }
-  },
-
-  async getAllCoursesFromFirestore() {
-    try {
-      const coursesSnapshot = await getDocs(query(collection(db, 'courses'), orderBy('createdAt', 'desc')));
-      return coursesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    } catch (error) {
-      console.error('Error fetching courses from Firestore:', error);
-      return [];
-    }
   }
 };
