@@ -280,7 +280,8 @@ const DashboardPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {enrolledCourses.slice(0, 3).map((course) => {
                 const completed = course.progress?.milestonesCompleted?.length || 0;
-                const percent = (completed / 5) * 100;
+                const totalMilestones = course.milestones?.length || 0;
+                const percent = totalMilestones > 0 ? (completed / totalMilestones) * 100 : 0;
                 
                 // Get icon based on field
                 const getCourseIcon = (field) => {
@@ -297,9 +298,22 @@ const DashboardPage = () => {
                   <Link key={course.id} to={`/course/${course.id}`} className="group">
                     <div className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm border border-[#E5E7EB] dark:border-slate-700 hover:shadow-xl transition-all duration-300">
                       <div className="h-32 bg-gray-100 dark:bg-slate-700 relative flex items-center justify-center">
-                        <CourseIcon className="w-16 h-16 text-gray-400/50" />
+                        {course.thumbnail ? (
+                          <img 
+                            src={course.thumbnail} 
+                            alt={course.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div className="icon-placeholder" style={{ display: course.thumbnail ? 'none' : 'flex' }}>
+                          <CourseIcon className="w-16 h-16 text-gray-400/50" />
+                        </div>
                         <div className="absolute top-3 right-3 px-3 py-1 bg-white/90 dark:bg-slate-900/90 rounded-full text-xs font-medium text-[#6B7280]">
-                          {completed}/5 milestones
+                          {completed}/{course.milestones?.length || 0} milestones
                         </div>
                       </div>
                       <div className="p-5">
