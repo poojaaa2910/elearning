@@ -175,7 +175,7 @@ export default function AdminDashboard() {
                     {course.milestones?.length || 0} milestones
                   </p>
                   <p className="text-xs text-gray-400">
-                    {course.quiz?.length || 0} quiz questions
+                    {course.quizCount || 0} quiz questions
                   </p>
                 </div>
                 <ArrowRightIcon className="w-5 h-5 text-gray-400" />

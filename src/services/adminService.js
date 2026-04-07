@@ -13,7 +13,13 @@ export const adminService = {
       const coursesRef = collection(db, 'courses');
       const q = query(coursesRef, orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const courses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Add quiz count from course document
+      return courses.map(course => ({
+        ...course,
+        quizCount: course.quiz?.length || 0
+      }));
     } catch (error) {
       console.error('Error fetching courses:', error);
       return [];
@@ -164,7 +170,9 @@ export const adminService = {
   },
 
   async saveQuiz(courseId, questions) {
+    console.log('Saving quiz for course:', courseId, 'with questions:', questions);
     const existingQuiz = await this.getQuiz(courseId);
+    console.log('Existing quiz:', existingQuiz);
     
     if (existingQuiz) {
       await updateDoc(doc(db, 'quizzes', existingQuiz.id), {
@@ -180,6 +188,7 @@ export const adminService = {
         updatedAt: new Date().toISOString()
       });
     }
+    console.log('Quiz saved!');
   },
 
   // ==================== FILE UPLOADS ====================

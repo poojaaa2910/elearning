@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { adminService } from '../services/adminService';
+import { courseService } from '../services/courseService';
 import { userService } from '../services/userService';
 import { useAuth } from '../hooks/useAuth';
 import { useAdaptiveSettings } from '../hooks/useAdaptiveSettings';
@@ -26,8 +27,10 @@ const QuizPage = () => {
 
   const loadQuiz = async () => {
     try {
-      const quizData = await adminService.getQuiz(courseId);
-      setQuiz(quizData?.questions || []);
+      // Get quiz from course document directly
+      const course = await courseService.getCourseFromFirestore(courseId);
+      console.log('Course data:', course);
+      setQuiz(course?.quiz || []);
     } catch (error) {
       console.error('Error loading quiz:', error);
     } finally {

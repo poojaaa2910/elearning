@@ -149,9 +149,15 @@ export default function CourseFormPage() {
           }
         }
         
-        // Save quiz from form
+        // Save quiz directly to course document
         if (quiz.length > 0) {
-          await adminService.saveQuiz(courseId, quiz);
+          try {
+            const cleanQuiz = quiz.map(({ id, ...rest }) => rest);
+            await adminService.updateCourse(courseId, { quiz: cleanQuiz });
+            console.log('Quiz saved to course!');
+          } catch (quizError) {
+            console.error('Error saving quiz:', quizError);
+          }
         }
       } else {
         // Create new course - use custom ID if provided
@@ -168,9 +174,15 @@ export default function CourseFormPage() {
           await adminService.addMilestone(newCourseId, { ...milestone, id: undefined });
         }
         
-        // Save quiz from form
+        // Save quiz directly to course document
         if (quiz.length > 0) {
-          await adminService.saveQuiz(newCourseId, quiz);
+          try {
+            const cleanQuiz = quiz.map(({ id, ...rest }) => rest);
+            await adminService.updateCourse(newCourseId, { quiz: cleanQuiz });
+            console.log('Quiz saved to course!');
+          } catch (quizError) {
+            console.error('Error saving quiz:', quizError);
+          }
         }
         
         navigate(`/admin/courses/${newCourseId}`);
