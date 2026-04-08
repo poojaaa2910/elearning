@@ -5,7 +5,7 @@ const LiteYouTube = ({ videoId, title, onPlay }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   
   const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-  consthqThumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  const hqThumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 
   const handlePlay = () => {
     setIsPlaying(true);
