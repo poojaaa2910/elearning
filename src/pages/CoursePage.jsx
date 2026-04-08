@@ -87,11 +87,10 @@ const CoursePage = () => {
           <Card className="overflow-hidden">
             <div className="relative">
               <img 
-                src={course.thumbnail || `https://img.youtube.com/vi/${course.youtubeId}/maxresdefault.jpg`} 
+                src={`https://img.youtube.com/vi/${course.youtubeId}/maxresdefault.jpg`}
                 alt={course.title}
                 className="w-full h-64 object-cover"
                 onError={(e) => {
-                  // Try fallback to standard YouTube thumbnail
                   if (e.target.src.includes('maxresdefault.jpg')) {
                     e.target.src = `https://img.youtube.com/vi/${course.youtubeId}/hqdefault.jpg`;
                   } else if (e.target.src.includes('hqdefault.jpg')) {
