@@ -124,18 +124,24 @@ const FieldPage = () => {
                 <div className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl border border-[#E5E7EB] dark:border-slate-700 transition-all duration-500 transform hover:-translate-y-2">
                   {/* Thumbnail */}
                   <div className="relative h-48 bg-gray-100 dark:bg-slate-700 overflow-hidden">
-                    {course.thumbnail ? (
+                    {course.youtubeId && (
                       <img 
-                        src={course.thumbnail} 
+                        src={`https://img.youtube.com/vi/${course.youtubeId}/maxresdefault.jpg`}
                         alt={course.title}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.parentElement.querySelector('.icon-placeholder').style.display = 'flex';
+                          if (e.target.src.includes('maxresdefault.jpg')) {
+                            e.target.src = `https://img.youtube.com/vi/${course.youtubeId}/hqdefault.jpg`;
+                          } else if (e.target.src.includes('hqdefault.jpg')) {
+                            e.target.src = `https://img.youtube.com/vi/${course.youtubeId}/mqdefault.jpg`;
+                          } else {
+                            e.target.style.display = 'none';
+                            e.target.parentElement.querySelector('.icon-placeholder').style.display = 'flex';
+                          }
                         }}
                       />
-                    ) : null}
-                    <div className="absolute inset-0 flex items-center justify-center icon-placeholder" style={{ display: course.thumbnail ? 'none' : 'flex' }}>
+                    )}
+                    <div className="absolute inset-0 flex items-center justify-center icon-placeholder" style={{ display: !course.youtubeId ? 'flex' : 'none' }}>
                       {(() => {
                         const Icon = getCourseIcon(course.field);
                         return <Icon className="w-20 h-20 text-gray-300 dark:text-gray-500" />;

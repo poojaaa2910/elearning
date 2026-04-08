@@ -87,11 +87,24 @@ const CoursePage = () => {
           <Card className="overflow-hidden">
             <div className="relative">
               <img 
-                src={course.thumbnail} 
+                src={course.thumbnail || `https://img.youtube.com/vi/${course.youtubeId}/maxresdefault.jpg`} 
                 alt={course.title}
                 className="w-full h-64 object-cover"
-                onError={(e) => { e.target.src = 'https://via.placeholder.com/800x400?text=Course' }}
+                onError={(e) => {
+                  // Try fallback to standard YouTube thumbnail
+                  if (e.target.src.includes('maxresdefault.jpg')) {
+                    e.target.src = `https://img.youtube.com/vi/${course.youtubeId}/hqdefault.jpg`;
+                  } else if (e.target.src.includes('hqdefault.jpg')) {
+                    e.target.src = `https://img.youtube.com/vi/${course.youtubeId}/mqdefault.jpg`;
+                  } else {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }
+                }}
               />
+              <div className="icon-placeholder hidden absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700">
+                <span className="text-6xl">{fieldIcon}</span>
+              </div>
               <div className="absolute top-4 left-4 flex items-center gap-2">
                 <span className="bg-white/90 dark:bg-black/70 px-3 py-1 rounded-full text-sm font-medium">
                   {fieldIcon} {course.field}

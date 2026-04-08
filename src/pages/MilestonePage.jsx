@@ -8,6 +8,7 @@ import { useAdaptiveSettings } from '../hooks/useAdaptiveSettings';
 import { useBehaviorTracking } from '../hooks/useBehaviorTracking';
 import { useReadAloud } from '../hooks/useReadAloud';
 import { useCourseVisitTracker } from '../hooks/useCourseVisitTracker';
+import { userService } from '../services/userService';
 import { 
   SpeakerWaveIcon, 
   PauseIcon, 
@@ -18,6 +19,7 @@ import {
 } from '@heroicons/react/24/outline';
 import Card from '../components/Card';
 import Button from '../components/Button';
+import LiteYouTube from '../components/LiteYouTube';
 
 const MilestonePage = () => {
   const { courseId, milestoneId } = useParams();
@@ -32,6 +34,27 @@ const MilestonePage = () => {
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [visitCount, setVisitCount] = useState(0);
+  const [initialVisitTracked, setInitialVisitTracked] = useState(false);
+  
+  // Track visit when user first enters the milestone
+  useEffect(() => {
+    const trackInitialVisit = async () => {
+      if (courseId && milestoneId && user?.uid && !initialVisitTracked) {
+        try {
+          const key = `course_${courseId}_milestone_${milestoneId}`;
+          const currentCount = await userService.getVisitCount(user.uid, key);
+          const newCount = currentCount + 1;
+          await userService.incrementVisitCount(user.uid, key);
+          setVisitCount(newCount);
+          setInitialVisitTracked(true);
+          console.log(`📖 Initial visit tracked: ${key} = ${newCount}`);
+        } catch (error) {
+          console.error('Error tracking initial visit:', error);
+        }
+      }
+    };
+    trackInitialVisit();
+  }, [courseId, milestoneId, user?.uid, initialVisitTracked]);
   
   useEffect(() => {
     const fetchVisitCount = async () => {
@@ -185,10 +208,9 @@ const MilestonePage = () => {
             </div>
 
             <div className="p-4">
-              {/* Video Player - Supports both YouTube and Custom Video with VTT */}
+              {/* Video Player - Lite YouTube Embed */}
               <div className="aspect-video bg-gray-900 rounded-lg mb-6 overflow-hidden">
                 {course.videoUrl ? (
-                  // Custom video with VTT captions
                   <video
                     className="w-full h-full"
                     controls
@@ -207,13 +229,10 @@ const MilestonePage = () => {
                     Your browser does not support the video tag.
                   </video>
                 ) : (
-                  // YouTube embed
-                  <iframe
-                    className="w-full h-full"
-                    src={`https://www.youtube.com/embed/${course.youtubeId}?enablejsapi=1`}
+                  <LiteYouTube 
+                    videoId={course.youtubeId} 
                     title={course.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
+                    onPlay={() => trackClick()}
                   />
                 )}
               </div>

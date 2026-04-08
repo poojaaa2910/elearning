@@ -113,9 +113,18 @@ export default function CourseListPage() {
             >
               {/* Thumbnail */}
               <div className="h-36 bg-gray-100 dark:bg-slate-700 relative flex-shrink-0">
-                {course.thumbnail ? (
-                  <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
-                ) : (
+                {course.youtubeId ? (
+                  <img 
+                    src={`https://img.youtube.com/vi/${course.youtubeId}/hqdefault.jpg`} 
+                    alt={course.title} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                {!course.youtubeId && (
                   <div className="w-full h-full flex items-center justify-center">
                     <DocumentTextIcon className="w-16 h-16 text-gray-300 dark:text-gray-600" />
                   </div>

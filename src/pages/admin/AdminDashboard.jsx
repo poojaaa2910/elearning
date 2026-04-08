@@ -184,9 +184,18 @@ export default function AdminDashboard() {
                 className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
               >
                 <div className="w-12 h-12 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center overflow-hidden">
-                  {course.thumbnail ? (
-                    <img src={course.thumbnail} alt="" className="w-full h-full object-cover" />
-                  ) : (
+                  {course.youtubeId ? (
+                    <img 
+                      src={`https://img.youtube.com/vi/${course.youtubeId}/hqdefault.jpg`} 
+                      alt="" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  {!course.youtubeId && (
                     <BookOpenIcon className="w-6 h-6 text-gray-400" />
                   )}
                 </div>

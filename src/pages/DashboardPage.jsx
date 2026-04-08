@@ -298,18 +298,24 @@ const DashboardPage = () => {
                   <Link key={course.id} to={`/course/${course.id}`} className="group">
                     <div className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm border border-[#E5E7EB] dark:border-slate-700 hover:shadow-xl transition-all duration-300">
                       <div className="h-32 bg-gray-100 dark:bg-slate-700 relative flex items-center justify-center">
-                        {course.thumbnail ? (
+                        {course.youtubeId ? (
                           <img 
-                            src={course.thumbnail} 
+                            src={`https://img.youtube.com/vi/${course.youtubeId}/maxresdefault.jpg`}
                             alt={course.title}
                             className="w-full h-full object-cover"
                             onError={(e) => {
-                              e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'flex';
+                              if (e.target.src.includes('maxresdefault.jpg')) {
+                                e.target.src = `https://img.youtube.com/vi/${course.youtubeId}/hqdefault.jpg`;
+                              } else if (e.target.src.includes('hqdefault.jpg')) {
+                                e.target.src = `https://img.youtube.com/vi/${course.youtubeId}/mqdefault.jpg`;
+                              } else {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }
                             }}
                           />
                         ) : null}
-                        <div className="icon-placeholder" style={{ display: course.thumbnail ? 'none' : 'flex' }}>
+                        <div className="icon-placeholder" style={{ display: course.youtubeId ? 'none' : 'flex' }}>
                           <CourseIcon className="w-16 h-16 text-gray-400/50" />
                         </div>
                         <div className="absolute top-3 right-3 px-3 py-1 bg-white/90 dark:bg-slate-900/90 rounded-full text-xs font-medium text-[#6B7280]">
