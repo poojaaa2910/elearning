@@ -211,17 +211,6 @@ const CoursePage = () => {
                   <span className="font-medium text-[#F29F29]">Take Quiz</span>
                 </Link>
               )}
-              {progress?.completed && !feedbackData && (
-                <button
-                  onClick={() => setShowFeedbackModal(true)}
-                  className="flex items-center space-x-3 p-3 rounded-lg bg-[#189D91]/10 hover:bg-[#189D91]/20 transition-colors w-full"
-                >
-                  <span className="w-8 h-8 rounded-full bg-[#189D91] text-white flex items-center justify-center">
-                    <StarIcon className="w-5 h-5" />
-                  </span>
-                  <span className="font-medium text-[#189D91]">Rate this course</span>
-                </button>
-              )}
               {feedbackData && (
                 <div className="flex items-center space-x-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
                   <span className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center">
@@ -240,6 +229,17 @@ const CoursePage = () => {
                     </div>
                   </div>
                 </div>
+              )}
+              {!feedbackData && (
+                <button
+                  onClick={() => setShowFeedbackModal(true)}
+                  className="flex items-center space-x-3 p-3 rounded-lg bg-[#189D91]/10 hover:bg-[#189D91]/20 transition-colors w-full"
+                >
+                  <span className="w-8 h-8 rounded-full bg-[#189D91] text-white flex items-center justify-center">
+                    <StarIcon className="w-5 h-5" />
+                  </span>
+                  <span className="font-medium text-[#189D91]">Rate this course</span>
+                </button>
               )}
             </div>
           </Card>
