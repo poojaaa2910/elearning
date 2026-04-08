@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { courseService } from '../services/courseService';
 import { userService } from '../services/userService';
+import { feedbackService } from '../services/feedbackService';
 import { useAuth } from '../hooks/useAuth';
 import { useCourseProgress } from '../hooks/useCourseProgress';
 import { useAdaptiveSettings } from '../hooks/useAdaptiveSettings';
-import { BoltIcon, CheckCircleIcon, PlayIcon, ClipboardDocumentCheckIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import { BoltIcon, CheckCircleIcon, PlayIcon, ClipboardDocumentCheckIcon, DocumentTextIcon, StarIcon } from '@heroicons/react/24/outline';
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import Card from '../components/Card';
 import ProgressBar from '../components/ProgressBar';
 import Button from '../components/Button';
@@ -16,15 +18,26 @@ const CoursePage = () => {
   const { user } = useAuth();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackData, setFeedbackData] = useState(null);
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   
   useEffect(() => {
     const fetchCourse = async () => {
       const fetchedCourse = await courseService.getCourseFromFirestore(courseId);
       setCourse(fetchedCourse);
+      
+      if (user?.uid) {
+        const existingFeedback = await feedbackService.getUserFeedbackForCourse(user.uid, courseId);
+        setFeedbackData(existingFeedback);
+      }
+      
       setLoading(false);
     };
     fetchCourse();
-  }, [courseId]);
+  }, [courseId, user?.uid]);
   
   const { progress, isMilestoneCompleted, getProgressPercentage, completeMilestone, loading: progressLoading } = useCourseProgress(user?.uid, courseId);
   const { fontSize, simplifiedMode, colorBlindMode, cognitiveMode } = useAdaptiveSettings();
@@ -186,10 +199,112 @@ const CoursePage = () => {
                   <span className="font-medium text-[#F29F29]">Take Quiz</span>
                 </Link>
               )}
+              {progress?.completed && !feedbackData && (
+                <button
+                  onClick={() => setShowFeedbackModal(true)}
+                  className="flex items-center space-x-3 p-3 rounded-lg bg-[#189D91]/10 hover:bg-[#189D91]/20 transition-colors w-full"
+                >
+                  <span className="w-8 h-8 rounded-full bg-[#189D91] text-white flex items-center justify-center">
+                    <StarIcon className="w-5 h-5" />
+                  </span>
+                  <span className="font-medium text-[#189D91]">Rate this course</span>
+                </button>
+              )}
+              {feedbackData && (
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                  <span className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center">
+                    <StarIconSolid className="w-5 h-5" />
+                  </span>
+                  <div>
+                    <span className="font-medium text-green-700 dark:text-green-400">You rated this course</span>
+                    <div className="flex gap-0.5 mt-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        star <= feedbackData.rating ? (
+                          <StarIconSolid key={star} className="w-3 h-3 text-yellow-400" />
+                        ) : (
+                          <StarIcon key={star} className="w-3 h-3 text-gray-300" />
+                        )
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
         </div>
       </div>
+
+      {showFeedbackModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-md shadow-xl">
+            {feedbackSubmitted ? (
+              <div className="text-center py-8">
+                <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Thank You!</h3>
+                <p className="text-gray-600 dark:text-gray-400">Your feedback has been submitted.</p>
+              </div>
+            ) : (
+              <>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  How was this course?
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  Your feedback helps us improve the learning experience.
+                </p>
+
+                <div className="flex justify-center gap-2 mb-6">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setFeedbackRating(star)}
+                      className="p-1 transition-transform hover:scale-110"
+                    >
+                      {star <= feedbackRating ? (
+                        <StarIconSolid className="w-10 h-10 text-yellow-400" />
+                      ) : (
+                        <StarIcon className="w-10 h-10 text-gray-300 dark:text-gray-600" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                <textarea
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  placeholder="Any additional feedback? (optional)"
+                  className="w-full p-3 border border-gray-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-900 dark:text-white mb-4 resize-none"
+                  rows={3}
+                />
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowFeedbackModal(false)}
+                    className="flex-1 py-3 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-slate-700"
+                  >
+                    Skip
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (feedbackRating === 0) return;
+                      await feedbackService.submitFeedback(courseId, user.uid, feedbackRating, feedbackText);
+                      setFeedbackSubmitted(true);
+                      setFeedbackData({ rating: feedbackRating, feedback: feedbackText });
+                      setTimeout(() => {
+                        setShowFeedbackModal(false);
+                        setFeedbackSubmitted(false);
+                      }, 1500);
+                    }}
+                    disabled={feedbackRating === 0}
+                    className="flex-1 py-3 bg-[#189D91] text-white rounded-xl font-medium hover:bg-[#158a7f] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Submit
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

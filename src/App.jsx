@@ -17,6 +17,7 @@ import QuizPage from './pages/QuizPage';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import FeedbackPage from './pages/admin/FeedbackPage';
 import CourseListPage from './pages/admin/CourseListPage';
 import CourseFormPage from './pages/admin/CourseFormPage';
 import FileUploadPage from './pages/admin/FileUploadPage';
@@ -177,6 +178,7 @@ const AppContent = () => {
         <Route path="/admin/courses/:courseId" element={<CourseFormPage />} />
         <Route path="/admin/courses/:courseId/files" element={<FileUploadPage />} />
         <Route path="/admin/courses/:courseId/quiz" element={<QuizEditorPage />} />
+        <Route path="/admin/feedback" element={<FeedbackPage />} />
       </Route>
       
       {/* Protected routes - require login AND completed onboarding */}

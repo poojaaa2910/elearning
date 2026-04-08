@@ -8,13 +8,15 @@ import {
   ArrowLeftOnRectangleIcon,
   Cog6ToothIcon,
   PlusIcon,
-  TrashIcon
+  TrashIcon,
+  ChatBubbleLeftIcon
 } from '@heroicons/react/24/outline';
 
 const adminNavItems = [
   { path: '/admin/dashboard', label: 'Dashboard', icon: HomeIcon },
   { path: '/admin/courses', label: 'Courses', icon: BookOpenIcon },
   { path: '/admin/courses/new', label: 'Add Course', icon: PlusIcon },
+  { path: '/admin/feedback', label: 'Feedback', icon: ChatBubbleLeftIcon },
 ];
 
 export default function AdminLayout() {

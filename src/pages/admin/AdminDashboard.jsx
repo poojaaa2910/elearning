@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
+import { feedbackService } from '../../services/feedbackService';
 import { 
   BookOpenIcon, 
   UsersIcon, 
@@ -9,8 +10,10 @@ import {
   ArrowRightIcon,
   PlusIcon,
   PencilSquareIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  StarIcon
 } from '@heroicons/react/24/outline';
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -21,16 +24,19 @@ export default function AdminDashboard() {
   });
   const [recentCourses, setRecentCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [feedbackStats, setFeedbackStats] = useState({ total: 0, averageRating: 0 });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsData, coursesData] = await Promise.all([
+        const [statsData, coursesData, fbStats] = await Promise.all([
           adminService.getStats(),
-          adminService.getAllCourses()
+          adminService.getAllCourses(),
+          feedbackService.getFeedbackStats()
         ]);
         setStats(statsData);
         setRecentCourses(coursesData.slice(0, 5));
+        setFeedbackStats({ total: fbStats.total, averageRating: fbStats.averageRating });
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -45,6 +51,7 @@ export default function AdminDashboard() {
     { label: 'Total Users', value: stats.totalUsers, icon: UsersIcon, color: 'bg-[#9AE19D]' },
     { label: 'Total Quizzes', value: stats.totalQuizzes, icon: QuestionMarkCircleIcon, color: 'bg-[#537A5A]' },
     { label: 'Total Admins', value: stats.totalAdmins, icon: DocumentTextIcon, color: 'bg-[#537A5A]' },
+    { label: 'Feedback', value: feedbackStats.total, icon: StarIcon, color: 'bg-[#F29F29]', subtext: feedbackStats.total > 0 ? `${feedbackStats.averageRating} avg rating` : '' },
   ];
 
   if (loading) {
@@ -64,13 +71,16 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
         {statCards.map((stat) => (
-          <div key={stat.label} className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-slate-700">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">{stat.label}</p>
                 <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1">{stat.value}</p>
+                {stat.subtext && (
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{stat.subtext}</p>
+                )}
               </div>
               <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center`}>
                 <stat.icon className="w-6 h-6 text-white" />
@@ -125,6 +135,20 @@ export default function AdminDashboard() {
           <div>
             <h3 className="text-xl font-bold">Manage Courses</h3>
             <p className="text-white/80">Edit, delete or view courses</p>
+          </div>
+          <ArrowRightIcon className="w-6 h-6 ml-auto" />
+        </Link>
+
+        <Link
+          to="/admin/feedback"
+          className="flex items-center gap-4 p-6 bg-[#189D91] rounded-2xl text-white hover:opacity-90 transition-opacity"
+        >
+          <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
+            <StarIconSolid className="w-7 h-7" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold">View Feedback</h3>
+            <p className="text-white/80">See course ratings and reviews</p>
           </div>
           <ArrowRightIcon className="w-6 h-6 ml-auto" />
         </Link>

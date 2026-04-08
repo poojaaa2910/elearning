@@ -3,9 +3,11 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { adminService } from '../services/adminService';
 import { courseService } from '../services/courseService';
 import { userService } from '../services/userService';
+import { feedbackService } from '../services/feedbackService';
 import { useAuth } from '../hooks/useAuth';
 import { useAdaptiveSettings } from '../hooks/useAdaptiveSettings';
-import { CheckCircleIcon, XCircleIcon, ArrowLeftIcon, TrophyIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, XCircleIcon, ArrowLeftIcon, TrophyIcon, StarIcon } from '@heroicons/react/24/outline';
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 
 const QuizPage = () => {
   const { courseId } = useParams();
@@ -20,6 +22,10 @@ const QuizPage = () => {
   const [answers, setAnswers] = useState([]);
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
   useEffect(() => {
     loadQuiz();
@@ -67,9 +73,27 @@ const QuizPage = () => {
       try {
         await userService.setUserProgress(user.uid, courseId, 'quiz-completed');
         await userService.markCourseCompleted(user.uid, courseId, percentage);
+        const existingFeedback = await feedbackService.getUserFeedbackForCourse(user.uid, courseId);
+        if (!existingFeedback) {
+          setShowFeedbackModal(true);
+        }
       } catch (error) {
         console.error('Error saving progress:', error);
       }
+    }
+  };
+
+  const handleSubmitFeedback = async () => {
+    if (feedbackRating === 0) return;
+    try {
+      await feedbackService.submitFeedback(courseId, user.uid, feedbackRating, feedbackText);
+      setFeedbackSubmitted(true);
+      setTimeout(() => {
+        setShowFeedbackModal(false);
+        setFeedbackSubmitted(false);
+      }, 1500);
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
     }
   };
 
@@ -230,6 +254,69 @@ const QuizPage = () => {
           </div>
         )}
       </div>
+
+      {showFeedbackModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-md shadow-xl">
+            {feedbackSubmitted ? (
+              <div className="text-center py-8">
+                <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Thank You!</h3>
+                <p className="text-gray-600 dark:text-gray-400">Your feedback has been submitted.</p>
+              </div>
+            ) : (
+              <>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                  How was this course?
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  Your feedback helps us improve the learning experience.
+                </p>
+
+                <div className="flex justify-center gap-2 mb-6">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setFeedbackRating(star)}
+                      className="p-1 transition-transform hover:scale-110"
+                    >
+                      {star <= feedbackRating ? (
+                        <StarIconSolid className="w-10 h-10 text-yellow-400" />
+                      ) : (
+                        <StarIcon className="w-10 h-10 text-gray-300 dark:text-gray-600" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                <textarea
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  placeholder="Any additional feedback? (optional)"
+                  className="w-full p-3 border border-gray-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-900 dark:text-white mb-4 resize-none"
+                  rows={3}
+                />
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowFeedbackModal(false)}
+                    className="flex-1 py-3 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-slate-700"
+                  >
+                    Skip
+                  </button>
+                  <button
+                    onClick={handleSubmitFeedback}
+                    disabled={feedbackRating === 0}
+                    className="flex-1 py-3 bg-[#189D91] text-white rounded-xl font-medium hover:bg-[#158a7f] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Submit
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
